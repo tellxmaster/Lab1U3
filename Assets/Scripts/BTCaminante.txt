@@ -1,0 +1,9 @@
+tree("Root")
+	fallback
+		sequence
+			EnemigoCerca
+			IrEnemigo 
+			Atacar
+		sequence
+			Descansar
+		RecorrerPerimetro
