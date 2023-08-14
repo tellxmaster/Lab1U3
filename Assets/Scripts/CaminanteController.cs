@@ -19,6 +19,8 @@ public class CaminanteController : MonoBehaviour
     public GameObject playerCamera;
     private float tiempoUltimoAtaque;
     public float intervaloAtaque = 1f;
+    public Transform zonaSegura;
+    public float radioZonaSegura = 5f;
 
 
     private void OnCollisionEnter(Collision collision)
@@ -128,12 +130,27 @@ public class CaminanteController : MonoBehaviour
             return;
         }
 
+        // Si no está en la zona segura, moverse hacia ella.
+        if (Vector3.Distance(transform.position, zonaSegura.position) > radioZonaSegura)
+        {
+            Vector3 direccion = (zonaSegura.position - transform.position).normalized;
+            transform.position += direccion * velocidad * Time.deltaTime;
+            Quaternion rotacionDeseada = Quaternion.LookRotation(direccion);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotacionDeseada, rotacionSuavizada * Time.deltaTime);
+            return; // Regresa después de moverse, para no ejecutar el código de descanso a continuación.
+        }
+
+        // Si está dentro de la zona segura, realizar las acciones de descanso.
+
         // Girar sobre su eje.
         transform.Rotate(new Vector3(0, 45, 0) * Time.deltaTime);
 
-        // Cambiar de color.
-        rend.material.color = Color.Lerp(Color.white, Color.blue, Mathf.PingPong(Time.time, 1));
+        // Cambiar de color en arcoíris.
+        float t = Mathf.PingPong(Time.time, 1);
+        Color arcoiris = Color.HSVToRGB(t, 1, 1);
+        rend.material.color = arcoiris;
 
+        // Cargar energía.
         energia += energiaRegeneradaPorSegundo * Time.deltaTime;
         Debug.Log("Cargando: " + energia + "%"); // Imprime el porcentaje de carga.
 
@@ -141,10 +158,13 @@ public class CaminanteController : MonoBehaviour
         {
             energia = 100;
             estaDescansando = false;
-            rend.material.color = Color.white; // Vuelve al color original.
+            rend.material.color = Color.white; // Vuelve al color original cuando termina.
             Task.current.Succeed();
         }
     }
+
+
+
 
     [Task]
     private void RecorrerPerimetro()
